@@ -1,0 +1,142 @@
+---
+title: "Car Fuel Efficiency"
+author: "Srujan Routhu"
+date: "Sunday, August 24, 2014"
+output: pdf_document
+---
+```{r echo=FALSE}
+
+library(datasets);
+z <- subset(mtcars, select = c(-hp, -qsec));
+
+```
+
+## Executive Summary
+
+This article is a report of an analysis done on a dataset containing details pertaining to various aspects of 32 different cars. The analysis was done to identify the parameters that significantly affect a car's fuel efficiency as measured in miles travelled per unit gallon. An interesting question that was expected to be answered was the effect of the transmission mode (automatic vs. manunal) on the fuel effeciency. Analysis was done by exploring the data using various statistical techniques including linear modelling and correlation analysis, and building a regression model to estimate fuel efficiency. The results were inconclusive as to the effect of transmission mode but 2 parameters explain the variation significantly up to a level of 82 percent.
+
+## Fuel Efficency Estimation
+
+### Description
+
+To estimate the factors affecting the fuel efficiency in a car, we use the dataset "mtcars" which is available in the core R package "datasets". The data comprises fuel cosumption and 10 aspects of automobile design and performance for 32 automobiles (1973 - 74 models).
+
+The 10 aspects are: number of cylinders, displacement (cu.in.), gross horsepower, rear axle ratio, weight (lb/1000), 1/4 mile time, V/S, transmission (0 = automatic, 1 = manual), number of forward gears, and number of carburetors.
+
+Out of the above 10 aspects, we directly discard gross horsepower and 1/4 mile time, as there variable values are consequential to the other aspects rather than causal to the fuel consumption.
+
+### Analysis
+
+A basic grasp on the process of fuel consumption points us to its dependence on Weight of the car. From figure 2 in the appendix we can see that the weight is correlated highly with the number of cylinders as well as the displacement. Hence, including all three of these aspects in the model could prove to be redundant.
+
+Figure 3 shows us the scatter plots between MPG and the three variables mentioned in the above paragraph. As we mentioned earlier, consider all three variables in the model could prove to be redundant, and we test this by analysing the adjusted r-squared values for all combinations of these variables.
+
+Figure 4 outlines the adjusted r - squared values for a linear model between MPG and all combinations of the three variables listed above. We can see that the most optimul inclusion is attained by discarding the displacement and choosing only the number of cylinders and weight, thereby reaching an adjusted r - squared of 82 percent. Our earlier concern that using all three variables could prove to be redundant is shown to be well founded.
+
+### Questions of Interest
+
+We see that the other variables in the data are not well correlated with the fuel consumption figures. But our question of interest pertains to the effect of transmission on the fuel consumption. We add the variable "Transmission" to the model we selected in the previous section and analyse the changes in the results.
+Following is the summary of the results.
+
+```{r echo=FALSE}
+
+summary(lm(mpg ~ as.factor(cyl) + wt + as.factor(am), data = z))$call
+summary(lm(mpg ~ as.factor(cyl) + wt + as.factor(am), data = z))$coefficients[,]
+
+```
+
+The inclusion of other variables was also analysed by adding the remaining variables one by one and calculating the linear model. All the remaining variables, Rear axle ratio, V/S, Number of forward gears, and Number of carburetors have been found to have insignificant effect on fuel consumption at reseonable levels of significance, while reducing the adjusted r - squared value by noticeable amount. The Number of carburetors variable can be ommitted directly based on the results of the univariate analysis shown in figure 1.
+
+The results shown above suggest that there is a 0.15 miles increase per gallon for cars with manual transmission, though the result is insignificant at any reasonable level of significance. The p value for the acceptance of the alternative hypothesis is 0.9089, **taking the uncertainty levels in our estimate to a value of over 90 %**. Therefore, we fail to reject the null hypothesis that there is no difference between the two modes of transmission, and hence cannot reach any credible conclusion on the matter of which mode of transmission is better for fuel effeciency.
+
+### Residual Plot
+
+Attached below is residual plot of the model specified in the previous section, showing fitted values on the x-axis and the residuals on the y-axis. Other diagnostic plots of the specified model can be found in the appendix (Figure 6).
+
+```{r echo=FALSE}
+
+fit <- lm(mpg ~ as.factor(cyl) + wt + as.factor(am), data = z)
+fit_resid <- residuals(fit)
+fit_fitted <- fitted(fit)
+
+par(mar = c(5, 4, 1, 1))
+plot(fit_fitted, fit_resid, xlab = "Fitted values", ylab = "Residuals", ylim = c(-6, 6))
+abline(h = 0, lty = 2)
+
+```
+
+\newpage
+
+## Appendix
+
+### Figure 1: Summaries of Univariate Regressions
+```{r, echo=FALSE}
+
+summary(lm(mpg ~ as.factor(cyl), data = z))$coefficients[,];
+summary(lm(mpg ~ disp, data = z))$coefficients[,];
+summary(lm(mpg ~ drat, data = z))$coefficients[,];
+summary(lm(mpg ~ wt, data = z))$coefficients[,];
+summary(lm(mpg ~ as.factor(vs), data = z))$coefficients[,];
+summary(lm(mpg ~ as.factor(am), data = z))$coefficients[,];
+summary(lm(mpg ~ as.factor(gear), data = z))$coefficients[,];
+summary(lm(mpg ~ as.factor(carb), data = z))$coefficients[,];
+
+```
+
+### Figure 2: Correlation Matrix
+```{r, echo=FALSE}
+
+round(cor(z),2)
+
+```
+
+### Figure 3: Scatter Plots for MPG Vs. Number of Cylinders, Weight and Displacement
+```{r, echo=FALSE}
+
+par(mfrow = c(1, 3), mar = c(5, 4, 1, 1));
+plot(z$cyl, z$mpg, xlab = "No. of cylinders", ylab = "MPG", type = "p");
+plot(z$wt, z$mpg, xlab = "Weight", ylab = "", type = "p");
+plot(z$disp, z$mpg, xlab = "Displacement", ylab = "", type = "p");
+
+```
+
+### Figure 4: Adjusted R-Squared values for combinations of variables plotted in figure 3
+```{r, echo=FALSE}
+
+r1 <- round(summary(lm(mpg ~ as.factor(cyl), data = z))$adj.r.squared,4)
+r2 <- round(summary(lm(mpg ~ wt, data = z))$adj.r.squared,4)
+r3 <- round(summary(lm(mpg ~ disp, data = z))$adj.r.squared,4)
+r4 <- round(summary(lm(mpg ~ as.factor(cyl) + wt, data = z))$adj.r.squared,4)
+r5 <- round(summary(lm(mpg ~ wt + disp, data = z))$adj.r.squared,4)
+r6 <- round(summary(lm(mpg ~ as.factor(cyl) + disp, data = z))$adj.r.squared,4)
+r7 <- round(summary(lm(mpg ~ as.factor(cyl) + wt + disp, data = z))$adj.r.squared,4)
+
+```
+1. mpg ~ as.factor(cyl)                    : adjusted r - squared = `r r1`
+2. mpg ~ wt                                : adjusted r - squared = `r r2`
+3. mpg ~ disp                              : adjusted r - squared = `r r3`
+4. mpg ~ as.factor(cyl) + wt               : adjusted r - squared = `r r4`
+5. mpg ~ wt + displacement                 : adjusted r - squared = `r r5`
+6. mpg ~ as.factor(cyl) + displacement     : adjusted r - squared = `r r6`
+7. mpg ~ as.factor(cyl) + wt + displacement: adjusted r - squared = `r r7`
+
+### Figure 5: Summaries of Linear Models after including each of the remaining variables
+```{r echo=FALSE}
+
+summary(lm(mpg ~ as.factor(cyl) + wt + as.factor(am) + drat, data = z))$call
+summary(lm(mpg ~ as.factor(cyl) + wt + as.factor(am) + drat, data = z))$coefficients[,]
+summary(lm(mpg ~ as.factor(cyl) + wt + as.factor(am) + as.factor(vs), data = z))$call
+summary(lm(mpg ~ as.factor(cyl) + wt + as.factor(am) + as.factor(vs), data = z))$coefficients[,]
+summary(lm(mpg ~ as.factor(cyl) + wt + as.factor(am) + as.factor(gear), data = z))$call
+summary(lm(mpg ~ as.factor(cyl) + wt + as.factor(am) + as.factor(gear), data = z))$coefficients[,]
+
+```
+
+### Figure 6: Other model diagnostics (QQ Plot)
+```{r echo=FALSE}
+
+par(mar = c(5, 4, 1, 1))
+qqnorm(fit_resid, ylab = "Residuals")
+qqline(fit_resid)
+
+```
